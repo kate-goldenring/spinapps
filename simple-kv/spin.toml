@@ -1,0 +1,19 @@
+spin_manifest_version = 2
+
+[application]
+name = "simple-kv"
+version = "0.1.0"
+authors = ["Kate Goldenring <kate.goldenring@fermyon.com>"]
+description = "Uses KV store"
+
+[[trigger.http]]
+route = "/..."
+component = "simple-kv"
+
+[component.simple-kv]
+source = "target/wasm32-wasi/release/simple_kv.wasm"
+allowed_outbound_hosts = []
+key_value_stores = ["default"]
+[component.simple-kv.build]
+command = "cargo build --target wasm32-wasi --release"
+watch = ["src/**/*.rs", "Cargo.toml"]

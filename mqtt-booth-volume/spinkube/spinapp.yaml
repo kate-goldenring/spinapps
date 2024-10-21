@@ -1,0 +1,15 @@
+apiVersion: core.spinoperator.dev/v1alpha1
+kind: SpinApp
+metadata:
+  name: mqtt-booth-volume
+spec:
+  image: "ghcr.io/kate-goldenring/spin-apps/mqtt-booth-volume:v0.1.0"
+  executor: containerd-shim-spin
+  replicas: 1
+  variables:
+  - name: topic
+    value: "booth/+"
+  - name: broker_uri
+    value: "mqtt://emqx.default.svc.cluster.local:1883"
+
+

@@ -1,0 +1,6 @@
+CREATE TABLE IF NOT EXISTS noise_log (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    source TEXT NOT NULL,
+    volume INTEGER NOT NULL,
+    timestamp TEXT NOT NULL
+);

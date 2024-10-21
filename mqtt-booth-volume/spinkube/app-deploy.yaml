@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mqtt-booth-volume
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mqtt-booth-volume
+  template:
+    metadata:
+      labels:
+        app: mqtt-booth-volume
+    spec:
+      runtimeClassName: wasmtime-spin-v2
+      containers:
+        - name: mqtt-booth-volume
+          image: ghcr.io/kate-goldenring/spin-apps/mqtt-booth-volume:v0.1.0
+          imagePullPolicy: IfNotPresent
+          command: ["/"]
+          ports:
+          - containerPort: 80
+          env:
+          - name: SPIN_VARIABLE_TOPIC
+            value: "booth/+"
+          - name: SPIN_VARIABLE_BROKER_URI
+            value: "mqtt://CLUSTER_IP:1883"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mqtt-booth-volume
+spec:
+  # type: LoadBalancer
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  selector:
+    app: mqtt-booth-volume

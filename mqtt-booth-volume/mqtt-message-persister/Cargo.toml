@@ -1,5 +1,5 @@
 [package]
-name = "mqtt-app"
+name = "mqtt-message-persister"
 authors = ["Kate Goldenring <kate.goldenring@fermyon.com>"]
 description = "Triggered by MQTT"
 version = "0.1.0"

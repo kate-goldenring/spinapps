@@ -15,7 +15,7 @@ spec:
       runtimeClassName: wasmtime-spin-v2
       containers:
         - name: mqtt-booth-volume
-          image: ghcr.io/kate-goldenring/spin-apps/mqtt-booth-volume:v0.1.0
+          image: ghcr.io/kate-goldenring/spin-apps/mqtt-booth-volume:v0.2.0
           imagePullPolicy: IfNotPresent
           command: ["/"]
           ports:
@@ -25,6 +25,10 @@ spec:
             value: "booth/+"
           - name: SPIN_VARIABLE_BROKER_URI
             value: "mqtt://CLUSTER_IP:1883"
+          - name: SPIN_VARIABLE_SQLITE_USERNAME
+            value: "admin"
+          - name: SPIN_VARIABLE_SQLITE_PASSWORD
+            value: "password"
 ---
 apiVersion: v1
 kind: Service

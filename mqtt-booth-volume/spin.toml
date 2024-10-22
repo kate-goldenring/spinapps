@@ -1,33 +1,37 @@
 spin_manifest_version = 2
 
 [application]
-name = "mqtt-app"
-version = "0.1.0"
+name = "mqtt-booth-volume"
+version = "0.2.0"
 authors = ["Kate Goldenring <kate.goldenring@fermyon.com>"]
 description = "Triggered by MQTT"
 
 [variables]
 topic = { required = true }
 broker_uri = { required = true }
+sqlite_username = { required = true }
+sqlite_password = { required = true }
 
 [application.trigger.mqtt]
 # address = "mqtt://localhost:1883"
 address = "{{ broker_uri }}"
 username = ""
 password = ""
-keep_alive_interval = "30"
+keep_alive_interval = "30" # seconds
 
 [[trigger.mqtt]]
-component = "mqtt-app"
+component = "mqtt-message-persister"
 topic = "{{ topic }}"
+# The quality of service (QoS) level for the MQTT client. 1 indicates that
+# messages must be delivered at least once.
 qos = "1"
 
-[component.mqtt-app]
-source = "handle-mqtt/target/wasm32-wasi/release/mqtt_app.wasm"
+[component.mqtt-message-persister]
+source = "mqtt-message-persister/target/wasm32-wasi/release/mqtt_message_persister.wasm"
 allowed_outbound_hosts = []
 sqlite_databases = ["default"]
-[component.mqtt-app.build]
-command = "cargo build --target wasm32-wasi --release --manifest-path handle-mqtt/Cargo.toml"
+[component.mqtt-message-persister.build]
+command = "cargo build --target wasm32-wasi --release --manifest-path mqtt-message-persister/Cargo.toml"
 watch = ["src/**/*.rs", "Cargo.toml"]
 
 [[trigger.http]]
@@ -50,3 +54,15 @@ component = "frontend"
 [component.frontend]
 source = { url = "https://github.com/fermyon/spin-fileserver/releases/download/v0.2.1/spin_static_fs.wasm", digest = "sha256:5f05b15f0f7cd353d390bc5ebffec7fe25c6a6d7a05b9366c86dcb1a346e9f0f" }
 files = [{ source = "frontend/", destination = "/" }]
+
+[[trigger.http]]
+component = "sqlite-explorer"
+route = "/internal/sqlite/..."
+
+[component.sqlite-explorer]
+source = { url = "https://github.com/karthik2804/spin-sqlite-web-cli/releases/download/v0.1.0/spin-sqlite-web-cli.wasm", digest = "sha256:2bab8dca3c50bc082c543ce9e9b367aec03e9de1efd62c6b748035bd9de48356" }
+sqlite_databases = ["default"]
+
+[component.sqlite-explorer.variables]
+sqlite_username = "{{ sqlite_username }}"
+sqlite_password = "{{ sqlite_password }}"

@@ -1,0 +1,4 @@
+[sqlite_database.default]
+type = "libsql"
+url = "https://mqtt-booth-volume-<<YOUR_ACCOUNT>>.turso.io"
+token = "<<REDACTED>>"

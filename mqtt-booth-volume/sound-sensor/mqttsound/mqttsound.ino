@@ -1,6 +1,7 @@
 #include "WiFiS3.h"
 #include "arduino_secrets.h"
 #include <ArduinoMqttClient.h>
+#include <ArduinoJson.h>
 
 int sound_sensor = A2; // Sound sensor should be plugged into pin A2
 
@@ -44,10 +45,8 @@ void loop() {
 
   // If a value higher than 300 is registered, we will publish the sound level to the MQTT broker
   if (soundValue > threshold) {
-    // Send message, the Print interface can be used to set the message contents
-    mqttClient.beginMessage(publish_topic);
-    mqttClient.print(soundValue);
-    mqttClient.endMessage();
+    // Send data
+    sendVolumeData(soundValue);
   }
 
   delay(delay_ms); // Delay between sound readings
@@ -84,4 +83,20 @@ void reconnectMQTT() {
     delay(1000);
   }
   Serial.println(" Reconnected!");
+}
+
+void sendVolumeData(int soundValue) {
+    // Create a JSON object
+    StaticJsonDocument<64> doc;
+    doc["volume"] = soundValue;
+
+    // Serialize the JSON object to a string
+    char jsonBuffer[64];
+    serializeJson(doc, jsonBuffer, sizeof(jsonBuffer));
+
+    // Send the serialized JSON string over MQTT
+    mqttClient.beginMessage(publish_topic);
+    // The print interface can be used to set the message contents
+    mqttClient.print(jsonBuffer);
+    mqttClient.endMessage();
 }

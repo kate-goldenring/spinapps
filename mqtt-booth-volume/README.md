@@ -10,10 +10,21 @@ To run the MQTT broker and Spin app, simply run `make all`.
 
 ## Running an MQTT Broker
 
-[EMQX](https://github.com/emqx/emqx) is an open source MQTT broker that can easily be [run as a Docker container](https://mqttx.app/docs/get-started). Run it locally on port 1883 in the background as follows:
+Eclipse provides a free publically available [MQTT broker](https://test.mosquitto.org/) that can be used for demos. Use `test.mosquitto.org` as the broker address with port 1883. Connect and subscribe to a topic on the broker as follows:
+
+```sh
+mqttx sub  -h test.mosquitto.org -t "/booth/20" -p 1883
+```
+
+Alternatively, run your own broker with [EMQX](https://github.com/emqx/emqx), which is an open source MQTT broker that can easily be [run as a Docker container](https://mqttx.app/docs/get-started). Run it locally on port 1883 in the background as follows:
 
 ```sh
 docker run -d --name emqx -p 1883:1883 emqx/emqx
+```
+
+Connect and subscribe to a topic on the locally running EMQX broker:
+```sh
+mqttx sub  -h '127.0.0.1' -t "/booth/20" -p 1883
 ```
 
 ## Running the spin app to listen to a specific topic
@@ -28,10 +39,10 @@ SPIN_VARIABLE_BROKER_URI="mqtt://localhost:1883" SPIN_VARIABLE_TOPIC="booth/+" s
 
 First, download [MQTTX CLI](https://github.com/emqx/MQTTX/tree/main/cli) which facilitates connecting to a broker and then publishing or subscribing to topics.
 
-Now, publish to the topic for booth 20.
+Now, publish to the topic for booth 20. Set the broker host address to that of your broker, we are using Mosquitto's public broker here:
 
 ```sh
-mqttx pub -t 'booth/20' -h '127.0.0.1' -p 1883 -m '{"volume": 350}'
+mqttx pub -h test.mosquitto.org -t 'booth/20' -p 1883 -m '{"volume": 350}'
 ```
 
 ## Example Sound Sensor
@@ -41,7 +52,7 @@ To use a real device with this Spin app, the device must meet the following crit
 - Has a sound sensor
 - Can publish messages over MQTT (requires WiFi access)
 
-The [`sound-sensor`](./sound-sensor) folder contains an Anduino program that can be loaded on a device with a sound sensor. It has been tested with a a device comprised of the following components, which all can be purchased from the Arduino store:
+The [`sound-sensor`](./sound-sensor/mqttsound) folder contains an Anduino program that can be loaded on a device with a sound sensor. It has been tested with a a device comprised of the following components, which all can be purchased from the Arduino store:
 
 - An [Arduino UNO R4 WiFi Board](https://store-usa.arduino.cc/products/uno-r4-wifi?variant=42871580917967)
 - A [Grove Sound Sensor](https://store-usa.arduino.cc/products/grove-sound-sensor?variant=39277290488015) (plugged into A2)

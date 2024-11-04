@@ -32,7 +32,7 @@ mqttx sub  -h '127.0.0.1' -t "/booth/20" -p 1883
 Now, that our broker is running, we can start our Spin app, setting the broker URI to be our locally running broker. We will also listen for all messages posted to a topic that matches `booth/+`. The `+` sign is a single-level wildcard that will match any string in place of the wildcard, i.e. `booth/20` but not `booth/20/b`.
 
 ```sh
-SPIN_VARIABLE_BROKER_URI="mqtt://localhost:1883" SPIN_VARIABLE_TOPIC="booth/+" spin build --up --sqlite @mqtt-message-persister/migration.up.sql
+SPIN_VARIABLE_MQTT_BROKER_URI="mqtt://localhost:1883" SPIN_VARIABLE_MQTT_TOPIC="booth/+" spin build --up --sqlite @mqtt-message-persister/migration.up.sql
 ```
 
 ## Publishing Messages from a Fake Device
@@ -58,16 +58,33 @@ The [`sound-sensor`](./sound-sensor/mqttsound) folder contains an Anduino progra
 - A [Grove Sound Sensor](https://store-usa.arduino.cc/products/grove-sound-sensor?variant=39277290488015) (plugged into A2)
 - A [Grove Base Shield V2.0](https://store-usa.arduino.cc/products/grove-base-shield-v2-0-for-arduino?variant=39557870682319) for Arduino
 
-## Running on SpinKube
+## Running on SpinKube with Local SQLite Database
+
+The Spin runtime supports persisting data to SQLite databases. A local one can be used by default.
+It cannot be pre-configured in SpinKube since it will be created in the container filesystem when
+the `SpinApp` Pod is started. Instead, you can configure the database after the app has started
+using the SQLite explorer component. Be sure to uncomment the SQLite explorer component from the
+[`spin.toml`](./spin.toml) and push your app to a registry first.
 
 ```sh
+export REGISTRY=ghcr.io/username/mqtt-booth-volume
+export TAG=v0.1.0
+spin registry push $REGISTRY:$TAG
 make emqx-apply
-make app-apply
+SPIN_VARIABLE_MQTT_BROKER_URI="mqtt://emqx.default.svc.cluster.local:1883" make app-apply
 # port-forward the app service
 kubectl port-forward svc/mqtt-booth-volume 3000:80
 ```
 
-Navigate to localhost:3000/internal/sqlite. Log in with credentials "admin" / "password" and perform the initial database migration by entering the contents of [`migration.up.sql`](./mqtt-message-persister/migration.up.sql). Now that the database is initialized, you can deploy the fake device:
+> Note: the local SQLite database should only be used for testing purposes and only on `SpinApp`
+> deployments with 1 replica. For more complex scenarios, see the [next
+> section](#persisting-to-a-turso-database-with-runtime-config) on how to use runtime configuration
+> with an external database.
+
+Navigate to localhost:3000/internal/sqlite. Log in with credentials "admin" / "password" and perform
+the initial database migration by entering the contents of
+[`migration.up.sql`](./mqtt-message-persister/migration.up.sql). Now that the database is
+initialized, you can deploy the fake device:
 
 ```sh
 make mock-device-apply

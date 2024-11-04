@@ -3,16 +3,16 @@ kind: SpinApp
 metadata:
   name: mqtt-booth-volume
 spec:
-  image: "ghcr.io/kate-goldenring/spin-apps/mqtt-booth-volume:v0.2.0"
+  image: "ghcr.io/kate-goldenring/spin-apps/mqtt-booth-volume:latest"
   executor: containerd-shim-spin
   replicas: 1
   variables:
-  - name: broker_uri
+  - name: mqtt_broker_uri
     value: mqtt://emqx.default.svc.cluster.local:1883
-  - name: sqlite_password
-    value: password
-  - name: sqlite_username
-    value: admin
-  - name: topic
+  - name: mqtt_topic
     value: booth/+
+  # - name: sqlite_password
+  #   value: password
+  # - name: sqlite_username
+  #   value: admin
 

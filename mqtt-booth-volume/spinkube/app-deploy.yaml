@@ -21,14 +21,14 @@ spec:
           ports:
           - containerPort: 80
           env:
-          - name: SPIN_VARIABLE_TOPIC
+          - name: SPIN_VARIABLE_MQTT_TOPIC
             value: "booth/+"
-          - name: SPIN_VARIABLE_BROKER_URI
-            value: "mqtt://CLUSTER_IP:1883"
-          - name: SPIN_VARIABLE_SQLITE_USERNAME
-            value: "admin"
-          - name: SPIN_VARIABLE_SQLITE_PASSWORD
-            value: "password"
+          - name: SPIN_VARIABLE_MQTT_BROKER_URI
+            value: "mqtt://BROKER_IP:1883"
+          # - name: SPIN_VARIABLE_SQLITE_USERNAME
+          #   value: "admin"
+          # - name: SPIN_VARIABLE_SQLITE_PASSWORD
+          #   value: "password"
 ---
 apiVersion: v1
 kind: Service

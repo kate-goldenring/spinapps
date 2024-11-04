@@ -102,3 +102,7 @@ turso db tokens create mqtt-booth-volume
 ```
 
 Update the [runtime-config.toml](./spinkube/runtime-config.toml) file to contain your database URL and token. Now, you can instruct the `spin` and `spin kube` CLI's to use the runtime configuration using the `--runtime-config-file` flag.
+
+## Running EMQX Inside Your Cluster
+
+Use the [`install-broker.sh`](./spinkube/broker-configuration/install-broker.sh) script to install an EMQX broker in your cluster. Provide the `-external` flag to deploy [EMQX cluster](https://docs.emqx.com/en/emqx-operator/latest/deployment/on-azure-aks.html#apps.emqx.io/v2beta1) and configure it to be available outside of the cluster.

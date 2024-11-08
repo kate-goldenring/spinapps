@@ -1,4 +1,6 @@
 # Spin MQTT Booth Volume App
+**This demo has been migrated to https://github.com/fermyon/spin-mqtt-booth-volume-app**. Please visit that repo for the latest and greatest.
+---
 
 Companies go to conferences to increase the visibility of their products. A big driver for that is getting conference attendees to engage with the company booth. One way engagement is often tracked is through scanning all booth visitors' badges. This is not only a manual process but also fails to indicate the level of engagement of a visitor. Nor does it track the times of the day when visitors are engaged in the booth which could be useful to understand for better booth staffing.
 

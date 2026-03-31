@@ -1,0 +1,23 @@
+spin_manifest_version = 2
+
+[application]
+name = "outbound-http"
+version = "0.1.0"
+authors = ["Kate Goldenring <kate.goldenring@gmail.com>"]
+description = ""
+
+[variables]
+outbound_host = { default = "https://www.fermyon.com/" }
+
+[[trigger.http]]
+route = "/..."
+component = "hello-rust"
+
+[component.hello-rust]
+source = "target/wasm32-wasip1/release/hello_rust.wasm"
+allowed_outbound_hosts = ["https://*"]
+[component.hello-rust.variables]
+outbound_host = "{{ outbound_host }}"
+[component.hello-rust.build]
+command = "cargo build --target wasm32-wasip1 --release"
+watch = ["src/**/*.rs", "Cargo.toml"]

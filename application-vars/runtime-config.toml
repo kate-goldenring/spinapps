@@ -1,0 +1,6 @@
+[[config_provider]]
+type = "vault"
+url = "http://127.0.0.1:8200"
+token = "root"
+mount = "secret"
+

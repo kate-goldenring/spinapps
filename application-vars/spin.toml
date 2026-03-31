@@ -1,0 +1,25 @@
+spin_manifest_version = 2
+
+[application]
+name = "application-vars"
+version = "0.1.0"
+authors = ["Kate Goldenring <kate.goldenring@gmail.com>"]
+description = "Uses multiple application variable providers"
+
+[variables]
+foo = { required = true, secret = true }
+bar = { required = true }
+
+[[trigger.http]]
+route = "/..."
+component = "application-vars"
+
+[component.application-vars]
+source = "target/wasm32-wasip1/release/application_vars.wasm"
+allowed_outbound_hosts = []
+[component.application-vars.variables]
+foo = "{{ foo }}"
+bar = "{{ bar }}"
+[component.application-vars.build]
+command = "cargo build --target wasm32-wasip1 --release"
+watch = ["src/**/*.rs", "Cargo.toml"]

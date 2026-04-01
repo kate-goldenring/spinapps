@@ -22,12 +22,12 @@ fn handle_cosmos_showcase(req: Request) -> Result<Response> {
     let mut router = Router::default();
     router.get("/hello", hello_world);
     router.get("/exists/:key", exists);
+    router.get("/repeat/:count", get_value_times);
     router.delete("/:key", delete_value);
     router.get("/all", get_all);
     router.post("/get", get_value_json);
     router.post("/set", set_pair);
     router.post("/:key", set_value);
-    router.get("/5/:key", get_value_times);
     router.get("/help", help);
     router.post("/kbs/:size", set_value_with_size_kbs);
     router.get("/:key", get_value);
@@ -40,6 +40,7 @@ fn help(_req: Request, _params: Params) -> Result<Response> {
     let response = "Available endpoints:\n\
                    GET /hello - returns a hello world message\n\
                    GET /all - returns all keys\n\
+                   GET /repeat/:count - retrieves the value at key 'key' :count times\n\
                    POST /get - retrieves a value by key in JSON format '{\"key\": \"mykey\"}'\n\
                    POST /set - sets a key-value pair in JSON format '{\"key\": \"mykey\", \"value\": \"myvalue\"}'\n\
                    GET /exists/:key - checks if a key exists in the store. Found: 200; Not Found: 404 \n\
@@ -171,23 +172,14 @@ fn get_all(_req: Request, _params: Params) -> Result<Response> {
 }
 
 fn get_value_times(_req: Request, params: Params) -> Result<Response> {
-    println!("entered get_value_times");
     let store = Store::open_default()?;
-    let Some(key) = params.get("key") else {
+    let Some(times) = params.get("count") else {
         return bad_request();
     };
-    match store.exists(key) {
-        Ok(true) => (),
-        Ok(false) => {
-            return Ok(http::Response::builder()
-                .status(http::StatusCode::NOT_FOUND)
-                .body(None)?)
-        }
-        Err(e) => return err_str(e.to_string()),
-    }
+    store.set("key", "value")?;
     let mut val: Vec<u8> = vec![];
-    for _ in 1..6 {
-        match store.get(key) {
+    for _ in 0..times.parse::<usize>().unwrap_or(1) {
+        match store.get("key") {
             Ok(mut value) => val.append(&mut value),
             Err(_) => return err(),
         }

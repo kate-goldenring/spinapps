@@ -8,6 +8,7 @@ description = ""
 
 [variables]
 outbound_host = { default = "https://www.fermyon.com/" }
+number_of_requests = { default = "1" }
 
 [[trigger.http]]
 route = "/..."
@@ -18,6 +19,7 @@ source = "target/wasm32-wasip1/release/hello_rust.wasm"
 allowed_outbound_hosts = ["https://*"]
 [component.hello-rust.variables]
 outbound_host = "{{ outbound_host }}"
+number_of_requests = "{{ number_of_requests }}"
 [component.hello-rust.build]
 command = "cargo build --target wasm32-wasip1 --release"
 watch = ["src/**/*.rs", "Cargo.toml"]

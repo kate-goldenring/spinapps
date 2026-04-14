@@ -1,0 +1,34 @@
+#:schema https://schemas.spinframework.dev/spin/manifest-v2/latest.json
+
+spin_manifest_version = 2
+
+[application]
+name = "hello-spin"
+version = "0.1.0"
+authors = ["Kate Goldenring <kate.goldenring@akamai.com>"]
+description = ""
+
+[variables]
+variant = { required = true }
+
+[[trigger.http]]
+route = "/screen-mode"
+component = "hello-spin"
+
+[component.hello-spin]
+source = "target/wasm32-wasip1/release/hello_spin.wasm"
+allowed_outbound_hosts = []
+key_value_stores = ["default"]
+# [component.hello-spin.variables]
+# variant = "{{variant}}"
+[component.hello-spin.build]
+command = "cargo build --target wasm32-wasip1 --release"
+watch = ["src/**/*.rs", "Cargo.toml"]
+
+[[trigger.http]]
+route = "/..."
+component = "fileserver"
+
+[component.fileserver]
+source = { url = "https://github.com/spinframework/spin-fileserver/releases/download/v0.3.0/spin_static_fs.wasm", digest = "sha256:ef88708817e107bf49985c7cefe4dd1f199bf26f6727819183d5c996baa3d148" }
+files = [{ source = "assets", destination = "/" }]

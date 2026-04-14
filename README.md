@@ -10,3 +10,4 @@ applications can be deployed to run on Kubernetes using [SpinKube](https://www.s
 - [Key Value Spin Application](./kv/) - showcases the variety of key value store operations that can be performed from a Spin application.
 - [Outbound HTTP Example](./outbound-http/) - demonstrates how to make outbound HTTP requests from a Spin application, with the target host configured via an application variable.
 - [Application Variables Example](./application-vars/) - demonstrates how to use multiple application variable providers in a single Spin application, and how to use the `spin variables` CLI command to manage application variables.
+- [A/B Testing Single/Split Screen](./screen-mode/) - demonstrates the ability to do A/B testing with application variables and key value.

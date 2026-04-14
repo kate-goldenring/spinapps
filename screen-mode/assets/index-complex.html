@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PlayStation Dual Screen Demo</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #0b0f1a;
+        --panel: #121a2c;
+        --accent: #3b82f6;
+        --accent-2: #22c55e;
+        --text: #e2e8f0;
+        --muted: #94a3b8;
+        --glow: 0 0 40px rgba(59, 130, 246, 0.35);
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: "SF Pro Display", "Segoe UI", system-ui, sans-serif;
+        background: radial-gradient(circle at top, #111827 0%, var(--bg) 60%);
+        color: var(--text);
+      }
+      .app {
+        min-height: 100vh;
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        gap: 16px;
+        padding: 24px;
+      }
+      .topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+      }
+      .title {
+        font-size: 20px;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+      }
+      .status {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 12px;
+        background: var(--panel);
+        border-radius: 999px;
+        font-size: 13px;
+        color: var(--muted);
+      }
+      .status .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--accent);
+        box-shadow: var(--glow);
+      }
+      .status[data-mode="split"] .dot { background: var(--accent-2); box-shadow: 0 0 25px rgba(34, 197, 94, 0.45); }
+      .status strong { color: var(--text); }
+      .screens {
+        display: grid;
+        gap: 16px;
+        grid-template-columns: 1fr;
+        transition: 220ms ease;
+      }
+      .screens.split { grid-template-columns: 2fr 1fr; }
+      .screen {
+        background: linear-gradient(160deg, rgba(59,130,246,0.2), rgba(15,23,42,0.6));
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        border-radius: 20px;
+        padding: 20px;
+        display: grid;
+        gap: 16px;
+        min-height: 320px;
+        position: relative;
+        overflow: hidden;
+      }
+      .screen::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at 30% 20%, rgba(59,130,246,0.25), transparent 55%);
+        opacity: 0.7;
+        pointer-events: none;
+      }
+      .screen h2 { margin: 0; font-size: 16px; color: var(--muted); text-transform: uppercase; letter-spacing: 2px; }
+      .screen .hero {
+        font-size: 28px;
+        font-weight: 600;
+        line-height: 1.2;
+      }
+      .screen .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: rgba(59, 130, 246, 0.2);
+        color: #bfdbfe;
+      }
+      .screen.secondary { background: linear-gradient(160deg, rgba(34,197,94,0.15), rgba(15,23,42,0.6)); }
+      .screen.secondary .chip { background: rgba(34, 197, 94, 0.2); color: #bbf7d0; }
+      .footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: var(--muted);
+        font-size: 12px;
+      }
+      button {
+        background: var(--accent);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        padding: 10px 14px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      button:disabled { opacity: 0.6; cursor: default; }
+      .note { color: var(--muted); max-width: 420px; }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <div class="topbar">
+        <div class="title">Dual Screen UX — A/B Test</div>
+        <div class="status" id="status" data-mode="loading">
+          <span class="dot"></span>
+          <span>Mode: <strong id="mode-label">Loading</strong></span>
+        </div>
+      </div>
+
+      <div class="screens" id="screens">
+        <section class="screen primary">
+          <h2>Main Display</h2>
+          <div class="hero">Explore the world with cinematic focus.</div>
+          <div class="chip">Adaptive HUD • 60 FPS • HDR</div>
+        </section>
+        <section class="screen secondary" id="secondary">
+          <h2>Companion Display</h2>
+          <div class="hero">Instant inventory, map, and party chat.</div>
+          <div class="chip">Touch shortcuts • Live stats</div>
+        </section>
+      </div>
+
+      <div class="footer">
+        <div class="note">This demo calls the /screen-mode endpoint to decide whether the UI is single-screen or split-screen.</div>
+        <button id="refresh">Recheck mode</button>
+      </div>
+    </div>
+
+    <script>
+      const status = document.getElementById("status");
+      const modeLabel = document.getElementById("mode-label");
+      const screens = document.getElementById("screens");
+      const secondary = document.getElementById("secondary");
+      const refresh = document.getElementById("refresh");
+
+      const setMode = (mode) => {
+        const normalized = mode === "split" ? "split" : "single";
+        modeLabel.textContent = normalized === "split" ? "Split" : "Single";
+        status.dataset.mode = normalized;
+        screens.classList.toggle("split", normalized === "split");
+        secondary.style.display = normalized === "split" ? "grid" : "none";
+      };
+
+      const loadMode = async () => {
+        refresh.disabled = true;
+        modeLabel.textContent = "Loading";
+        status.dataset.mode = "loading";
+        try {
+          const response = await fetch("/screen-mode");
+          const text = (await response.text()).trim();
+          setMode(text);
+        } catch {
+          modeLabel.textContent = "Offline";
+          status.dataset.mode = "error";
+        } finally {
+          refresh.disabled = false;
+        }
+      };
+
+      refresh.addEventListener("click", loadMode);
+      loadMode();
+    </script>
+  </body>
+</html>

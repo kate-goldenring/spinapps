@@ -1,0 +1,23 @@
+<!doctype html>
+<html>
+<body style="margin:0;display:flex;height:100vh">
+  <div class="frame">SCREEN</div>
+
+  <script>
+    const style = `
+      flex:1;display:flex;align-items:center;justify-content:center;
+      font:24px sans-serif;background:#8ecae6
+    `;
+    document.querySelector('.frame').style = style;
+
+    fetch('/screen-mode')
+      .then(r => r.text())
+      .then(m => {
+        if (m.trim() === 'split') {
+          const f = document.querySelector('.frame');
+          document.body.appendChild(f.cloneNode(true));
+        }
+      });
+  </script>
+</body>
+</html>

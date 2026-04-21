@@ -1,0 +1,21 @@
+#:schema https://schemas.spinframework.dev/spin/manifest-v2/latest.json
+
+spin_manifest_version = 2
+
+[application]
+name = "wasi-kv"
+version = "0.1.0"
+authors = ["Kate Goldenring <kgoldenr@akamai.com>"]
+description = ""
+
+[[trigger.http]]
+route = "/..."
+component = "wasi-kv"
+
+[component.wasi-kv]
+source = "target/wasm32-wasip1/release/wasi_key_value.wasm"
+allowed_outbound_hosts = []
+key_value_stores = ["default"]
+[component.wasi-kv.build]
+command = "cargo build --target wasm32-wasip1 --release --target-dir ./target"
+watch = ["src/**/*.rs", "Cargo.toml"]

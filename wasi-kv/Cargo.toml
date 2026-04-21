@@ -1,0 +1,16 @@
+[package]
+name = "wasi-key-value"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+helper = { path = "/Users/kgoldenr/Programs/github.com/spinframework/spin/tests/test-components/helper" }
+wit-bindgen = { version = "0.54", features = ["async"] }
+spin-sdk = "5.2.0"
+anyhow = "1"
+http = "0.2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"

@@ -12,15 +12,24 @@ async fn handle_hello_rust(_req: Request) -> anyhow::Result<impl IntoResponse> {
         .parse()
         .context("number_of_requests variable is not a valid integer")?;
     for _ in 0..number_of_requests {
-        let request = Request::builder()
-        .method(Method::Get)
-        .uri(&host)
-        .build();
-        let _response: Response = spin_sdk::http::send(request).await.context("failed to get response")?;
+        // sleep for 100ms
+        std::thread::sleep(std::time::Duration::from_millis(100));
+        let request = Request::builder().method(Method::Get).uri(&host).build();
+        let response: Response = spin_sdk::http::send(request)
+            .await
+            .context("failed to get response")?;
+        anyhow::ensure!(
+            (200..300).contains(response.status()),
+            "outbound request returned unsuccessful status code: {}",
+            response.status()
+        );
     }
     Ok(Response::builder()
         .status(200)
         .header("content-type", "text/plain")
-        .body(format!("Made {} outbound requests to {}", number_of_requests, host))
+        .body(format!(
+            "Made {} outbound requests to {}",
+            number_of_requests, host
+        ))
         .build())
 }

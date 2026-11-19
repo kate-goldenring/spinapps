@@ -7,8 +7,8 @@ authors = ["Kate Goldenring <kate.goldenring@gmail.com>"]
 description = ""
 
 [variables]
-outbound_host = { default = "https://www.fermyon.com/" }
-number_of_requests = { default = "1" }
+outbound_host = { default = "https://httpbin.org/get" }
+number_of_requests = { default = "10" }
 
 [[trigger.http]]
 route = "/..."

@@ -2,11 +2,11 @@ use helper::{bail, ensure_matches, ensure_ok};
 
 use helper::http_trigger_bindings::wasi::keyvalue::atomics as wasi_atomics;
 use helper::http_trigger_bindings::wasi::keyvalue::batch as wasi_batch;
-use helper::http_trigger_bindings::wasi::keyvalue::store::{Error, KeyResponse, open};
+use helper::http_trigger_bindings::wasi::keyvalue::store::{open, Error, KeyResponse};
 
+use anyhow::Result;
 use spin_sdk::http::{Params, Request, Response, Router};
 use spin_sdk::http_component;
-use anyhow::{Context, Result};
 
 #[http_component]
 fn handle_wasi_kv(req: Request) -> Response {
@@ -27,27 +27,26 @@ fn handle_wasi_kv(req: Request) -> Response {
 }
 
 fn get_value(_req: Request, params: Params) -> Result<Response> {
- let store = open("default")?;
-     let Some(key) = params.get("key") else {
+    let store = open("default")?;
+    let Some(key) = params.get("key") else {
         return bad_request();
     };
     match store.get(key) {
-        Ok(value) => Ok(Response::new(200, value)),
+        Ok(Some(value)) => Ok(Response::new(200, value)),
+        Ok(None) => Ok(Response::new(404, "".as_bytes().to_vec())),
         Err(e) => err_str(e.to_string()),
     }
-
 }
 
 fn set_value(req: Request, params: Params) -> Result<Response> {
- let store = open("default")?;
-     let Some(key) = params.get("key") else {
+    let store = open("default")?;
+    let Some(key) = params.get("key") else {
         return bad_request();
     };
-    match store.set(key,req.body()) {
+    match store.set(key, req.body()) {
         Ok(_) => Ok(Response::new(200, "".as_bytes().to_vec())),
         Err(e) => err_str(e.to_string()),
     }
-
 }
 
 fn delete_value(_req: Request, params: Params) -> Result<Response> {
@@ -98,8 +97,7 @@ struct KeyList {
 
 fn batch_set(req: Request, _params: Params) -> Result<Response> {
     let store = open("default")?;
-    let pairs: Vec<KvPair> = serde_json::from_slice(req.body())
-        .map_err(|e| anyhow::anyhow!(e))?;
+    let pairs: Vec<KvPair> = serde_json::from_slice(req.body()).map_err(|e| anyhow::anyhow!(e))?;
     let entries: Vec<(String, Vec<u8>)> = pairs
         .into_iter()
         .map(|p| (p.key, p.value.into_bytes()))
@@ -112,16 +110,14 @@ fn batch_set(req: Request, _params: Params) -> Result<Response> {
 
 fn batch_get(req: Request, _params: Params) -> Result<Response> {
     let store = open("default")?;
-    let key_list: KeyList = serde_json::from_slice(req.body())
-        .map_err(|e| anyhow::anyhow!(e))?;
+    let key_list: KeyList = serde_json::from_slice(req.body()).map_err(|e| anyhow::anyhow!(e))?;
     match wasi_batch::get_many(&store, &key_list.keys) {
         Ok(results) => {
             let pairs: Vec<(String, Option<String>)> = results
                 .into_iter()
                 .map(|(k, v)| (k, v.map(|b| String::from_utf8_lossy(&b).into_owned())))
                 .collect();
-            let json = serde_json::to_vec(&pairs)
-                .unwrap_or_else(|e| e.to_string().into_bytes());
+            let json = serde_json::to_vec(&pairs).unwrap_or_else(|e| e.to_string().into_bytes());
             Ok(Response::new(200, json))
         }
         Err(e) => err_str(e.to_string()),
@@ -130,8 +126,7 @@ fn batch_get(req: Request, _params: Params) -> Result<Response> {
 
 fn batch_delete(req: Request, _params: Params) -> Result<Response> {
     let store = open("default")?;
-    let key_list: KeyList = serde_json::from_slice(req.body())
-        .map_err(|e| anyhow::anyhow!(e))?;
+    let key_list: KeyList = serde_json::from_slice(req.body()).map_err(|e| anyhow::anyhow!(e))?;
     match wasi_batch::delete_many(&store, &key_list.keys) {
         Ok(_) => Ok(Response::new(200, "".as_bytes().to_vec())),
         Err(e) => err_str(e.to_string()),
@@ -143,12 +138,10 @@ fn increment(req: Request, params: Params) -> Result<Response> {
     let Some(key) = params.get("key") else {
         return bad_request();
     };
-    let delta: i64 = serde_json::from_slice(req.body())
-        .map_err(|e| anyhow::anyhow!(e))?;
+    let delta: i64 = serde_json::from_slice(req.body()).map_err(|e| anyhow::anyhow!(e))?;
     match wasi_atomics::increment(&store, key, delta) {
         Ok(new_val) => {
-            let json = serde_json::to_vec(&new_val)
-                .unwrap_or_else(|e| e.to_string().into_bytes());
+            let json = serde_json::to_vec(&new_val).unwrap_or_else(|e| e.to_string().into_bytes());
             Ok(Response::new(200, json))
         }
         Err(e) => err_str(e.to_string()),
@@ -166,13 +159,14 @@ fn compare_and_swap(req: Request, params: Params) -> Result<Response> {
     let Some(key) = params.get("key") else {
         return bad_request();
     };
-    let body: CasRequest = serde_json::from_slice(req.body())
-        .map_err(|e| anyhow::anyhow!(e))?;
-    let cas = wasi_atomics::Cas::new(&store, key)
-        .map_err(|e| anyhow::anyhow!(e.to_string()))?;
+    let body: CasRequest = serde_json::from_slice(req.body()).map_err(|e| anyhow::anyhow!(e))?;
+    let cas = wasi_atomics::Cas::new(&store, key).map_err(|e| anyhow::anyhow!(e.to_string()))?;
     if let Some(current) = cas.current().map_err(|e| anyhow::anyhow!(e.to_string()))? {
         if current != body.current_value.as_bytes() {
-            return Ok(Response::new(409, "current value does not match".as_bytes().to_vec()));
+            return Ok(Response::new(
+                409,
+                "current value does not match".as_bytes().to_vec(),
+            ));
         }
     } else {
         return Ok(Response::new(404, "key not found".as_bytes().to_vec()));
@@ -203,7 +197,6 @@ fn help(_req: Request, _params: Params) -> Response {
 fn keys<E>(res: &Result<KeyResponse, E>) -> Result<&[String], &E> {
     res.as_ref().map(|kr| kr.keys.as_slice())
 }
-
 
 /// helper function to quickly return a bad request HTTP Response
 fn bad_request() -> Result<Response> {

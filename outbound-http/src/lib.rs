@@ -17,12 +17,15 @@ async fn handle_hello_rust(_req: Request) -> anyhow::Result<impl IntoResponse> {
         let request = Request::builder().method(Method::Get).uri(&host).build();
         let response: Response = spin_sdk::http::send(request)
             .await
-            .context("failed to get response")?;
-        anyhow::ensure!(
-            (200..300).contains(response.status()),
-            "outbound request returned unsuccessful status code: {}",
-            response.status()
-        );
+            .map_err(|e| anyhow::anyhow!("failed to get response: {e:?}"))?;
+        if !(200..300).contains(response.status()) {
+            let error = anyhow::anyhow!(
+                "outbound request returned unsuccessful status code: {}",
+                response.status()
+            );
+            eprintln!("{error}");
+            return Err(error);
+        }
     }
     Ok(Response::builder()
         .status(200)
